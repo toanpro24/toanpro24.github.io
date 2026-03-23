@@ -1,4 +1,4 @@
-# toanpho24.github.io
+# toanpro24.github.io
 
 My personal portfolio website — built with plain HTML/CSS/JS, hosted on GitHub Pages.
 
