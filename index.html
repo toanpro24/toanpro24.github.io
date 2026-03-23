@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
+        /* ── Theme Variables ── */
+        :root, [data-theme="dark"] {
             --bg: #0a0a0f;
             --bg-card: #12121a;
             --bg-card-hover: #1a1a26;
@@ -32,6 +33,23 @@
             --cyan: #06b6d4;
             --orange: #f59e0b;
             --pink: #ec4899;
+            --nav-bg: rgba(10, 10, 15, 0.8);
+            --loader-bg: #0a0a0f;
+        }
+        [data-theme="light"] {
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f3f5;
+            --border: #dee2e6;
+            --text: #1a1a2e;
+            --text-muted: #495057;
+            --text-dim: #868e96;
+            --accent: #db0007;
+            --accent-soft: rgba(219, 0, 7, 0.08);
+            --gold: #c49a1a;
+            --gold-soft: rgba(196, 154, 26, 0.1);
+            --nav-bg: rgba(248, 249, 250, 0.85);
+            --loader-bg: #f8f9fa;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,16 +60,53 @@
             color: var(--text);
             line-height: 1.7;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
         }
         ::selection { background: var(--accent); color: white; }
+
+        /* ── Page Loader ── */
+        #loader {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--loader-bg);
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #loader .loader-letter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 4rem; font-weight: 800;
+            color: var(--accent);
+            animation: loaderPulse 1s ease-in-out infinite alternate;
+        }
+        @keyframes loaderPulse { 0%{opacity:0.3;transform:scale(0.9)} 100%{opacity:1;transform:scale(1)} }
+
+        /* ── Scroll Progress ── */
+        #scrollProgress {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 200;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.05s linear;
+        }
+
+        /* ── Cursor Glow ── */
+        #cursorGlow {
+            position: fixed; width: 600px; height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(219, 0, 7, 0.06), transparent 70%);
+            pointer-events: none; z-index: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        body:hover #cursorGlow { opacity: 1; }
+        [data-theme="light"] #cursorGlow { background: radial-gradient(circle, rgba(219, 0, 7, 0.04), transparent 70%); }
 
         /* ── Nav ── */
         nav {
             position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            padding: 16px 0;
-            transition: all 0.3s;
+            padding: 16px 0; transition: all 0.3s;
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            background: rgba(10, 10, 15, 0.8);
+            background: var(--nav-bg);
             border-bottom: 1px solid transparent;
         }
         nav.scrolled { border-bottom-color: var(--border); }
@@ -64,12 +119,19 @@
             font-size: 1.1rem; color: var(--accent); text-decoration: none;
         }
         .nav-logo span { color: var(--text-dim); }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
         .nav-links { display: flex; gap: 32px; list-style: none; }
         .nav-links a {
             color: var(--text-dim); text-decoration: none; font-size: 0.875rem;
             font-weight: 500; transition: color 0.2s; letter-spacing: 0.3px;
         }
         .nav-links a:hover { color: var(--text); }
+        .theme-toggle {
+            background: none; border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text); cursor: pointer; padding: 6px 8px;
+            font-size: 1rem; transition: all 0.2s; display: flex; align-items: center;
+        }
+        .theme-toggle:hover { border-color: var(--text-dim); background: var(--bg-card); }
         .nav-hamburger {
             display: none; background: none; border: none;
             color: var(--text); cursor: pointer; padding: 4px;
@@ -86,6 +148,7 @@
             background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(219, 0, 7, 0.07), transparent);
             pointer-events: none;
         }
+        [data-theme="light"] .hero-bg { background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(219, 0, 7, 0.04), transparent); }
         .hero-grid {
             position: absolute; inset: 0;
             background-image:
@@ -95,13 +158,15 @@
             mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent);
             pointer-events: none;
         }
-        /* cannon silhouette nod */
+        [data-theme="light"] .hero-grid {
+            background-image:
+                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+        }
         .hero-cannon {
             position: absolute; right: -60px; bottom: -30px;
             width: 320px; height: 320px; opacity: 0.025;
-            background: var(--accent);
-            border-radius: 50%;
-            pointer-events: none;
+            background: var(--accent); border-radius: 50%; pointer-events: none;
         }
         .hero-inner {
             max-width: 1200px; margin: 0 auto;
@@ -118,9 +183,20 @@
             transition: transform 0.3s, box-shadow 0.3s;
         }
         .hero-portrait:hover {
-            transform: translateY(-4px);
+            transform: translateY(-4px) scale(1.02);
             box-shadow: 0 24px 70px rgba(0,0,0,0.5);
         }
+
+        /* Hero stagger animation */
+        .hero-stagger { opacity: 0; transform: translateY(20px); animation: heroFadeIn 0.7s ease forwards; }
+        .hero-stagger:nth-child(1) { animation-delay: 0.2s; }
+        .hero-stagger:nth-child(2) { animation-delay: 0.4s; }
+        .hero-stagger:nth-child(3) { animation-delay: 0.6s; }
+        .hero-stagger:nth-child(4) { animation-delay: 0.8s; }
+        .hero-stagger:nth-child(5) { animation-delay: 1.0s; }
+        .hero-portrait { opacity: 0; animation: heroFadeIn 0.8s ease 0.3s forwards; }
+        @keyframes heroFadeIn { to { opacity: 1; transform: translateY(0); } }
+
         .hero-badge {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 6px 16px;
@@ -162,8 +238,22 @@
             border: 1px solid var(--border);
         }
         .btn-outline:hover { border-color: var(--text-dim); background: var(--bg-card); }
+
+        /* ── Currently Widget ── */
+        .currently {
+            display: flex; gap: 24px; margin-top: 32px; flex-wrap: wrap;
+        }
+        .currently-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 16px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 10px;
+            font-size: 0.813rem; color: var(--text-muted);
+        }
+        .currently-item .c-emoji { font-size: 1rem; }
+        .currently-item strong { color: var(--text); font-weight: 600; }
+
         .hero-stats {
-            display: flex; gap: 48px; margin-top: 64px;
+            display: flex; gap: 48px; margin-top: 40px;
             padding-top: 40px; border-top: 1px solid var(--border);
         }
         .hero-stat .num {
@@ -199,7 +289,7 @@
             padding: 32px; background: var(--bg-card);
             border: 1px solid var(--border); border-radius: 16px; transition: all 0.3s;
         }
-        .exp-card:hover { border-color: rgba(219, 0, 7, 0.25); background: var(--bg-card-hover); }
+        .exp-card:hover { border-color: rgba(219, 0, 7, 0.25); background: var(--bg-card-hover); box-shadow: 0 0 30px var(--accent-soft); }
         .exp-meta { display: flex; flex-direction: column; gap: 4px; }
         .exp-date { font-family: 'JetBrains Mono', monospace; font-size: 0.813rem; color: var(--text-dim); }
         .exp-company { font-weight: 600; color: var(--accent); font-size: 0.925rem; }
@@ -227,14 +317,22 @@
             display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;
         }
         .proj-card {
-            padding: 32px; background: var(--bg-card);
+            padding: 0; background: var(--bg-card);
             border: 1px solid var(--border); border-radius: 16px;
-            transition: all 0.3s; display: flex; flex-direction: column;
+            transition: all 0.3s; display: flex; flex-direction: column; overflow: hidden;
         }
         .proj-card:hover {
             border-color: rgba(219, 0, 7, 0.25); background: var(--bg-card-hover);
-            transform: translateY(-2px);
+            transform: translateY(-3px); box-shadow: 0 8px 30px var(--accent-soft);
         }
+        .proj-screenshot {
+            width: 100%; height: 180px; object-fit: cover; object-position: top;
+            border-bottom: 1px solid var(--border);
+            transition: transform 0.5s;
+        }
+        .proj-card:hover .proj-screenshot { transform: scale(1.03); }
+        .proj-screenshot-wrap { overflow: hidden; }
+        .proj-body { padding: 28px; display: flex; flex-direction: column; flex: 1; }
         .proj-icon {
             width: 44px; height: 44px; border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
@@ -261,6 +359,7 @@
             display: flex; align-items: center; gap: 6px; transition: color 0.2s;
         }
         .proj-link:hover { color: var(--accent); }
+        .gh-icon { width: 16px; height: 16px; }
 
         /* ── Skills ── */
         .skills-section { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -273,10 +372,14 @@
         .skill-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
         .skill-item {
             display: flex; align-items: center; gap: 10px;
-            font-size: 0.925rem; color: var(--text-muted); transition: color 0.2s;
+            font-size: 0.925rem; color: var(--text-muted); transition: all 0.2s;
         }
-        .skill-item:hover { color: var(--text); }
-        .skill-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .skill-item:hover { color: var(--text); transform: translateX(4px); }
+        .skill-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .skill-item:hover .skill-dot { transform: scale(1.5); box-shadow: 0 0 8px currentColor; }
 
         /* ── Education ── */
         .edu-card {
@@ -327,7 +430,7 @@
             border: 1px solid var(--border); border-radius: 16px;
             transition: all 0.3s;
         }
-        .interest-card:hover { border-color: rgba(219, 0, 7, 0.25); background: var(--bg-card-hover); }
+        .interest-card:hover { border-color: rgba(219, 0, 7, 0.25); background: var(--bg-card-hover); box-shadow: 0 0 25px var(--accent-soft); }
         .interest-icon { font-size: 1.5rem; margin-bottom: 14px; display: block; }
         .interest-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
         .interest-card p { color: var(--text-dim); font-size: 0.875rem; line-height: 1.6; }
@@ -352,7 +455,7 @@
         }
         .contact-card:hover {
             border-color: var(--accent); background: var(--bg-card-hover);
-            transform: translateY(-2px);
+            transform: translateY(-2px); box-shadow: 0 4px 20px var(--accent-soft);
         }
         .contact-card .c-icon {
             width: 40px; height: 40px; border-radius: 10px;
@@ -373,6 +476,17 @@
             font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
             color: var(--accent); opacity: 0.5; margin-top: 8px;
             letter-spacing: 1px;
+        }
+
+        /* ── Confetti (easter egg) ── */
+        .confetti-piece {
+            position: fixed; z-index: 9998; pointer-events: none;
+            width: 10px; height: 10px; opacity: 1;
+            animation: confettiFall 2.5s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
         /* ── Animations ── */
@@ -396,7 +510,7 @@
             .nav-links.open {
                 display: flex; flex-direction: column; position: absolute;
                 top: 100%; left: 0; right: 0;
-                background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px);
+                background: var(--nav-bg); backdrop-filter: blur(20px);
                 padding: 24px 32px; gap: 20px; border-bottom: 1px solid var(--border);
             }
             .nav-hamburger { display: block; }
@@ -404,6 +518,7 @@
             .hero-portrait { width: 240px; height: 240px; }
             .hero-desc { margin-left: auto; margin-right: auto; }
             .hero-actions { justify-content: center; }
+            .currently { justify-content: center; }
             .hero h1 { letter-spacing: -1px; }
             .hero-stats { flex-wrap: wrap; gap: 24px; justify-content: center; }
             .hero-stat { min-width: 100px; }
@@ -414,6 +529,7 @@
             .interest-photo-card { flex-direction: column; text-align: center; }
             .interest-photo { width: 100%; height: 220px; }
             .section { padding: 64px 0; }
+            #cursorGlow { display: none; }
         }
         @media (max-width: 480px) {
             .hero-inner { padding: 100px 20px 60px; }
@@ -424,21 +540,33 @@
 </head>
 <body>
 
+<!-- Page Loader -->
+<div id="loader"><span class="loader-letter">T</span></div>
+
+<!-- Scroll Progress Bar -->
+<div id="scrollProgress"></div>
+
+<!-- Cursor Glow -->
+<div id="cursorGlow"></div>
+
 <!-- Nav -->
 <nav id="nav">
     <div class="nav-inner">
         <a href="#" class="nav-logo">toan<span>.dev</span></a>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="#experience">Experience</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#education">Education</a></li>
-            <li><a href="#beyond">Beyond Code</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-        <button class="nav-hamburger" id="navToggle" aria-label="Toggle menu">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        <div class="nav-right">
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#experience">Experience</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#education">Education</a></li>
+                <li><a href="#beyond">Beyond Code</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">&#x1F319;</button>
+            <button class="nav-hamburger" id="navToggle" aria-label="Toggle menu">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
     </div>
 </nav>
 
@@ -449,39 +577,49 @@
     <div class="hero-cannon"></div>
     <div class="hero-inner">
         <div class="hero-text">
-            <div class="hero-badge">
+            <div class="hero-badge hero-stagger">
                 <span class="dot"></span>
                 Open to 2026 opportunities
             </div>
-            <h1>
+            <h1 class="hero-stagger">
                 Building things<br>
                 <span class="highlight">for the web.</span>
             </h1>
-            <p class="hero-desc">
+            <p class="hero-desc hero-stagger">
                 I'm Toan Pham &mdash; a full stack developer and Computer Science student at Michigan State University.
                 I build scalable applications with clean code and a bias for shipping.
                 When I'm not coding, I'm probably watching K-dramas or yelling at an Arsenal match.
             </p>
-            <div class="hero-actions">
+            <div class="hero-actions hero-stagger">
                 <a href="#contact" class="btn btn-primary">Get in Touch</a>
                 <a href="assets/Toan_Pham_Resume.pdf" class="btn btn-outline" download>Resume</a>
                 <a href="#projects" class="btn btn-outline">View Projects</a>
             </div>
-            <div class="hero-stats">
+            <div class="currently hero-stagger">
+                <div class="currently-item">
+                    <span class="c-emoji">&#x1F4FA;</span>
+                    Watching: <strong>When Life Gives You Tangerines</strong>
+                </div>
+                <div class="currently-item">
+                    <span class="c-emoji">&#x1F6E0;</span>
+                    Building: <strong>K-Drama Tier List v2</strong>
+                </div>
+            </div>
+            <div class="hero-stats hero-stagger">
                 <div class="hero-stat">
-                    <div class="num">3</div>
+                    <div class="num" data-count="3">0</div>
                     <div class="label">Work experiences</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="num">3.71</div>
+                    <div class="num" data-count="3.71" data-decimals="2">0</div>
                     <div class="label">GPA</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="num">5x</div>
+                    <div class="num" data-count="5" data-suffix="x">0</div>
                     <div class="label">Dean's List</div>
                 </div>
                 <div class="hero-stat">
-                    <div class="num">50+</div>
+                    <div class="num" data-count="50" data-suffix="+">0</div>
                     <div class="label">APIs Built</div>
                 </div>
             </div>
@@ -570,63 +708,70 @@
 
         <div class="project-grid">
             <div class="proj-card reveal reveal-delay-1">
-                <div class="proj-icon" style="background: var(--accent-soft); color: var(--accent);">&#x1F3AC;</div>
-                <h3>K-Drama Tier List</h3>
-                <p>Full-stack PWA for ranking and tracking Korean drama actresses with drag-and-drop tier lists, watchlists, comparison tools, timeline views, and personalized recommendations.</p>
-                <div class="proj-tags">
-                    <span class="proj-tag">React</span>
-                    <span class="proj-tag">TypeScript</span>
-                    <span class="proj-tag">FastAPI</span>
-                    <span class="proj-tag">MongoDB</span>
-                    <span class="proj-tag">Railway</span>
+                <div class="proj-screenshot-wrap">
+                    <img class="proj-screenshot" src="assets/image.png" alt="K-Drama Tier List screenshot" loading="lazy" />
                 </div>
-                <div class="proj-links">
-                    <a href="https://github.com/toanpro24/kdrama-ranking" class="proj-link" target="_blank">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                        Source
-                    </a>
-                    <a href="https://kdrama-ranking-1.vercel.app/" class="proj-link" target="_blank">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        Live Demo
-                    </a>
+                <div class="proj-body">
+                    <h3>K-Drama Tier List</h3>
+                    <p>Full-stack PWA for ranking and tracking Korean drama actresses with drag-and-drop tier lists, watchlists, comparison tools, timeline views, and personalized recommendations.</p>
+                    <div class="proj-tags">
+                        <span class="proj-tag">React</span>
+                        <span class="proj-tag">TypeScript</span>
+                        <span class="proj-tag">FastAPI</span>
+                        <span class="proj-tag">MongoDB</span>
+                    </div>
+                    <div class="proj-links">
+                        <a href="https://github.com/toanpro24/kdrama-ranking" class="proj-link" target="_blank">
+                            <svg class="gh-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            Source
+                        </a>
+                        <a href="https://kdrama-ranking-1.vercel.app/" class="proj-link" target="_blank">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Live Demo
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <div class="proj-card reveal reveal-delay-2">
-                <div class="proj-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--blue);">&#x1F310;</div>
-                <h3>Company Product Showcase</h3>
-                <p>Bilingual (English/Vietnamese) product showcase website with category filtering, dynamic routing, JWT auth, admin dashboard, and internationalization via custom LanguageContext.</p>
-                <div class="proj-tags">
-                    <span class="proj-tag">React</span>
-                    <span class="proj-tag">FastAPI</span>
-                    <span class="proj-tag">SQLAlchemy</span>
-                    <span class="proj-tag">SQLite</span>
-                    <span class="proj-tag">JWT</span>
-                </div>
-                <div class="proj-links">
-                    <a href="https://github.com/toanpro24/E-commerce-platform" class="proj-link" target="_blank">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                        Source
-                    </a>
+                <div class="proj-body">
+                    <div class="proj-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--blue);">&#x1F310;</div>
+                    <h3>Company Product Showcase</h3>
+                    <p>Bilingual (English/Vietnamese) product showcase website with category filtering, dynamic routing, JWT auth, admin dashboard, and internationalization via custom LanguageContext.</p>
+                    <div class="proj-tags">
+                        <span class="proj-tag">React</span>
+                        <span class="proj-tag">FastAPI</span>
+                        <span class="proj-tag">SQLAlchemy</span>
+                        <span class="proj-tag">SQLite</span>
+                        <span class="proj-tag">JWT</span>
+                    </div>
+                    <div class="proj-links">
+                        <a href="https://github.com/toanpro24/E-commerce-platform" class="proj-link" target="_blank">
+                            <svg class="gh-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            Source
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <div class="proj-card reveal reveal-delay-3">
-                <div class="proj-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--green);">&#x1F6D2;</div>
-                <h3>Grocery Store Microservices</h3>
-                <p>Containerized e-commerce platform with Flask microservices, JWT authentication, role-based access control, and optimized inter-service communication.</p>
-                <div class="proj-tags">
-                    <span class="proj-tag">Python</span>
-                    <span class="proj-tag">Flask</span>
-                    <span class="proj-tag">Docker</span>
-                    <span class="proj-tag">JWT</span>
-                    <span class="proj-tag">MySQL</span>
-                </div>
-                <div class="proj-links">
-                    <a href="https://github.com/toanpro24/Grocery-Store-Microservices-Application" class="proj-link" target="_blank">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                        Source
-                    </a>
+                <div class="proj-body">
+                    <div class="proj-icon" style="background: rgba(34, 197, 94, 0.1); color: var(--green);">&#x1F6D2;</div>
+                    <h3>Grocery Store Microservices</h3>
+                    <p>Containerized e-commerce platform with Flask microservices, JWT authentication, role-based access control, and optimized inter-service communication.</p>
+                    <div class="proj-tags">
+                        <span class="proj-tag">Python</span>
+                        <span class="proj-tag">Flask</span>
+                        <span class="proj-tag">Docker</span>
+                        <span class="proj-tag">JWT</span>
+                        <span class="proj-tag">MySQL</span>
+                    </div>
+                    <div class="proj-links">
+                        <a href="https://github.com/toanpro24/Grocery-Store-Microservices-Application" class="proj-link" target="_blank">
+                            <svg class="gh-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            Source
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -823,21 +968,109 @@
 </footer>
 
 <script>
-    // Nav scroll
+    // ── Page Loader ──
+    window.addEventListener('load', () => {
+        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 600);
+    });
+
+    // ── Scroll Progress Bar ──
+    const progressBar = document.getElementById('scrollProgress');
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement;
+        const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+        progressBar.style.width = pct + '%';
+    });
+
+    // ── Cursor Glow ──
+    const glow = document.getElementById('cursorGlow');
+    document.addEventListener('mousemove', (e) => {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+    });
+
+    // ── Nav scroll ──
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50));
 
-    // Mobile nav
+    // ── Mobile nav ──
     const toggle = document.getElementById('navToggle');
     const links = document.getElementById('navLinks');
     toggle.addEventListener('click', () => links.classList.toggle('open'));
     links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
 
-    // Scroll reveal
+    // ── Theme Toggle ──
+    const themeBtn = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme');
+    if (saved) { html.dataset.theme = saved; themeBtn.textContent = saved === 'light' ? '\u2600' : '\uD83C\uDF19'; }
+    themeBtn.addEventListener('click', () => {
+        const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+        html.dataset.theme = next;
+        localStorage.setItem('theme', next);
+        themeBtn.textContent = next === 'light' ? '\u2600' : '\uD83C\uDF19';
+    });
+
+    // ── Scroll Reveal ──
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── Animated Counters ──
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const el = entry.target;
+            if (el.dataset.counted) return;
+            el.dataset.counted = 'true';
+            const target = parseFloat(el.dataset.count);
+            const decimals = parseInt(el.dataset.decimals || '0');
+            const suffix = el.dataset.suffix || '';
+            const duration = 1500;
+            const start = performance.now();
+            function tick(now) {
+                const t = Math.min((now - start) / duration, 1);
+                const ease = 1 - Math.pow(1 - t, 3);
+                const val = ease * target;
+                el.textContent = val.toFixed(decimals) + suffix;
+                if (t < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+
+    // ── Konami Code Easter Egg ──
+    const konami = [38,38,40,40,37,39,37,39,66,65];
+    let konamiIdx = 0;
+    document.addEventListener('keydown', (e) => {
+        if (e.keyCode === konami[konamiIdx]) {
+            konamiIdx++;
+            if (konamiIdx === konami.length) {
+                konamiIdx = 0;
+                fireConfetti();
+            }
+        } else {
+            konamiIdx = 0;
+        }
+    });
+    function fireConfetti() {
+        const colors = ['#db0007', '#e8b830', '#3b82f6', '#22c55e', '#ec4899', '#f59e0b'];
+        for (let i = 0; i < 80; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + 'vw';
+            piece.style.top = '-10px';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            piece.style.width = (Math.random() * 8 + 5) + 'px';
+            piece.style.height = (Math.random() * 8 + 5) + 'px';
+            piece.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+            piece.style.animationDelay = (Math.random() * 0.5) + 's';
+            document.body.appendChild(piece);
+            setTimeout(() => piece.remove(), 3000);
+        }
+    }
 </script>
 </body>
 </html>
